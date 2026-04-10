@@ -1,0 +1,277 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "title": "Aviator Betting Game API",
+    "version": "1.0.0",
+    "description": "Real-time Aviator betting game backend with WebSocket support",
+    "contact": {
+      "name": "API Support",
+      "email": "support@aviator.game"
+    },
+    "license": {
+      "name": "Apache 2.0",
+      "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+    }
+  },
+  "host": "localhost:8080",
+  "basePath": "/api/v1",
+  "schemes": ["http", "https"],
+  "consumes": ["application/json"],
+  "produces": ["application/json"],
+  "securityDefinitions": {
+    "BearerAuth": {
+      "type": "apiKey",
+      "name": "Authorization",
+      "in": "header"
+    }
+  },
+  "paths": {
+    "/health": {
+      "get": {
+        "summary": "Health Check",
+        "description": "Get server health status",
+        "tags": ["Health"],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Server is healthy",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "status": {"type": "string"}
+              }
+            }
+          }
+        }
+      }
+    },
+    "/register": {
+      "post": {
+        "summary": "User Registration",
+        "description": "Register a new user with email and password",
+        "tags": ["Authentication"],
+        "security": [],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["name", "email", "password"],
+              "properties": {
+                "name": {"type": "string"},
+                "email": {"type": "string"},
+                "password": {"type": "string"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {"description": "User registered successfully"},
+          "400": {"description": "Invalid request or validation failed"}
+        }
+      }
+    },
+    "/login": {
+      "post": {
+        "summary": "User Login",
+        "description": "Login with email and password to get JWT token",
+        "tags": ["Authentication"],
+        "security": [],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["email", "password"],
+              "properties": {
+                "email": {"type": "string"},
+                "password": {"type": "string"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {"description": "Login successful"},
+          "401": {"description": "Invalid credentials"}
+        }
+      }
+    },
+    "/profile": {
+      "get": {
+        "summary": "Get User Profile",
+        "description": "Get user's profile including wallet balance",
+        "tags": ["Profile"],
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {"description": "Profile retrieved successfully"},
+          "401": {"description": "Unauthorized"}
+        }
+      },
+      "put": {
+        "summary": "Update User Profile",
+        "description": "Update user's name and email",
+        "tags": ["Profile"],
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["name", "email"],
+              "properties": {
+                "name": {"type": "string"},
+                "email": {"type": "string"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {"description": "Profile updated successfully"},
+          "400": {"description": "Invalid request or validation failed"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/wallet": {
+      "get": {
+        "summary": "Get Wallet Balance",
+        "description": "Get user's current wallet balance",
+        "tags": ["Wallet"],
+        "security": [{"BearerAuth": []}],
+        "responses": {
+          "200": {"description": "Wallet retrieved successfully"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/bet": {
+      "post": {
+        "summary": "Place a Bet",
+        "description": "Place a new bet on the current game round",
+        "tags": ["Betting"],
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["amount"],
+              "properties": {
+                "amount": {"type": "number"},
+                "auto_cashout": {"type": "number"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "201": {"description": "Bet placed successfully"},
+          "400": {"description": "Bet placement failed"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/cashout": {
+      "post": {
+        "summary": "Cashout a Bet",
+        "description": "Cashout an active bet at current multiplier",
+        "tags": ["Betting"],
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {
+            "name": "body",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "type": "object",
+              "required": ["bet_id"],
+              "properties": {
+                "bet_id": {"type": "integer"}
+              }
+            }
+          }
+        ],
+        "responses": {
+          "200": {"description": "Cashout successful"},
+          "400": {"description": "Cashout failed"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/bets/history": {
+      "get": {
+        "summary": "Get Bet History",
+        "description": "Get user's betting history with pagination",
+        "tags": ["Betting"],
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {"name": "page", "in": "query", "type": "integer", "default": 1},
+          {"name": "limit", "in": "query", "type": "integer", "default": 10}
+        ],
+        "responses": {
+          "200": {"description": "Bet history retrieved successfully"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/game/history": {
+      "get": {
+        "summary": "Get Game History",
+        "description": "Get global game round history",
+        "tags": ["History"],
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {"name": "page", "in": "query", "type": "integer", "default": 1},
+          {"name": "limit", "in": "query", "type": "integer", "default": 20}
+        ],
+        "responses": {
+          "200": {"description": "Game history retrieved successfully"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/transactions/history": {
+      "get": {
+        "summary": "Get Transaction History",
+        "description": "Get user's transaction history",
+        "tags": ["History"],
+        "security": [{"BearerAuth": []}],
+        "parameters": [
+          {"name": "page", "in": "query", "type": "integer", "default": 1},
+          {"name": "limit", "in": "query", "type": "integer", "default": 20}
+        ],
+        "responses": {
+          "200": {"description": "Transaction history retrieved successfully"},
+          "401": {"description": "Unauthorized"}
+        }
+      }
+    },
+    "/ws": {
+      "get": {
+        "summary": "WebSocket Connection",
+        "description": "Real-time game events via WebSocket",
+        "tags": ["WebSocket"],
+        "security": [],
+        "responses": {
+          "101": {"description": "Switching Protocols"}
+        }
+      }
+    }
+  },
+  "tags": [
+    {"name": "Health", "description": "Server health check"},
+    {"name": "Authentication", "description": "User registration and login"},
+    {"name": "Profile", "description": "User profile management"},
+    {"name": "Wallet", "description": "Wallet and balance management"},
+    {"name": "Betting", "description": "Betting operations"},
+    {"name": "History", "description": "Game and transaction history"},
+    {"name": "WebSocket", "description": "Real-time WebSocket events"}
+  ]
+}

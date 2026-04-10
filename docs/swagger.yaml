@@ -1,0 +1,1499 @@
+# swagger: '2.0'
+# info:
+#   title: Aviator Betting Game API
+#   version: 1.0.0
+#   description: Real-time Aviator betting game backend with WebSocket support
+#   termsOfService: http://swagger.io/terms/
+#   contact:
+#     name: API Support
+#     email: support@aviator.game
+#   license:
+#     name: Apache 2.0
+#     url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+# host: localhost:8080
+# basePath: /api/v1
+# schemes:
+#   - http
+#   - https
+
+# consumes:
+#   - application/json
+# produces:
+#   - application/json
+
+# securityDefinitions:
+#   BearerAuth:
+#     type: apiKey
+#     name: Authorization
+#     in: header
+#     description: JWT Bearer token. Format - "Bearer {token}"
+
+# security:
+#   - BearerAuth: []
+
+# paths:
+#   /health:
+#     get:
+#       summary: Health Check
+#       description: Check if the server is running and healthy
+#       tags:
+#         - Health
+#       security: []
+#       produces:
+#         - application/json
+#       responses:
+#         200:
+#           description: Server is healthy
+#           schema:
+#             type: object
+#             properties:
+#               success:
+#                 type: boolean
+#                 example: true
+#               message:
+#                 type: string
+#                 example: Server is healthy
+#               data:
+#                 type: object
+#                 properties:
+#                   status:
+#                     type: string
+#                     example: ok
+
+#   /register:
+#     post:
+#       summary: User Registration
+#       description: Register a new user account with email and password
+#       tags:
+#         - Authentication
+#       security: []
+#       parameters:
+#         - name: body
+#           in: body
+#           required: true
+#           schema:
+#             $ref: '#/definitions/RegisterRequest'
+#       responses:
+#         201:
+#           description: User registered successfully
+#           schema:
+#             $ref: '#/definitions/AuthResponse'
+#         400:
+#           description: Registration failed - Invalid input or email already exists
+#           schema:
+#             $ref: '#/definitions/ErrorResponse'
+
+#   /login:
+#     post:
+#       summary: User Login
+#       description: Login with email and password to receive JWT token
+#       tags:
+#         - Authentication
+#       security: []
+#       parameters:
+#         - name: body
+#           in: body
+#           required: true
+#           schema:
+#             $ref: '#/definitions/LoginRequest'
+#       responses:
+#         200:
+#           description: Login successful
+#           schema:
+#             $ref: '#/definitions/AuthResponse'
+#         401:
+#           description: Invalid email or password
+#           schema:
+#             $ref: '#/definitions/ErrorResponse'
+#         400:
+#           description: Invalid request format
+#           schema:
+#             $ref: '#/definitions/ErrorResponse'
+
+#   /profile:
+#     get:
+#       summary: Get User Profile
+#       description: Get authenticated user's profile information including wallet balance
+#       tags:
+#         - Profile
+#       security:
+#         - BearerAuth: []
+#       responses:
+#         200:
+#           description: Profile retrieved successfully
+#           schema:
+#             $ref: '#/definitions/ProfileResponse'
+#         401:
+#           description: Unauthorized - Invalid or missing token
+#           schema:
+#             $ref: '#/definitions/ErrorResponse'
+#         404:
+#           description: User not found
+#           schema:
+#             $ref: '#/definitions/ErrorResponse'
+
+#   /wallet:
+#     get:
+#       summary: Get Wallet Balance
+#       description: Get authenticated user's current wallet balance and transaction count
+#       tags:
+#         - Wallet
+#       security:
+#         - BearerAuth: []
+#       responses:
+#         200:
+#           description: Wallet retrieved successfully
+#           schema:
+#             $ref: '#/definitions/WalletResponse'
+#         401:
+#           description: Unauthorized - Invalid or missing token
+#           schema:
+#             $ref: '#/definitions/ErrorResponse'
+#         404:
+#           description: Wallet not found
+#           schema:
+#             $ref: '#/definitions/ErrorResponse'
+
+#   /bet:
+#     post:
+#       summary: Place a Bet
+#       description: Place a new bet on the current game round with optional auto-cashout
+#       tags:
+#         - Betting
+#       security:
+#         - BearerAuth: []
+#       parameters:
+#         - name: body
+#           in: body
+#           required: true
+#           schema:
+#             $ref: '#/definitions/BetRequest'
+#       responses:
+#         201:
+#           description: Bet placed successfully
+#           schema:
+#             $ref: '#/definitions/BetResponse'
+#         400:
+#           description: Bet placement failed - Insufficient balance or invalid amount
+#           schema:
+#             $ref: '#/definitions/ErrorResponse'
+#         401:
+#           description: Unauthorized - Invalid or missing token
+#           schema:
+#             $ref: '#/definitions/ErrorResponse'
+
+#   /cashout:
+#     post:
+#       summary: Cashout a Bet
+#       description: Cashout (stop) an active bet at the current multiplier value
+#       tags:
+#         - Betting
+#       security:
+#         - BearerAuth: []
+#       parameters:
+#         - name: body
+#           in: body
+#           required: true
+#           schema:
+#             $ref: '#/definitions/CashoutRequest'
+#         - name: multiplier
+#           in: query
+#           type: number
+#           format: float
+#           description: Current game multiplier (for verification)
+#       responses:
+#         200:
+#           description: Cashout successful
+#           schema:
+#             $ref: '#/definitions/CashoutResponse'
+#         400:
+#           description: Cashout failed - Bet not found or already cashed out
+#           schema:
+#             $ref: '#/definitions/ErrorResponse'
+#         401:
+#           description: Unauthorized - Invalid or missing token
+#           schema:
+#             $ref: '#/definitions/ErrorResponse'
+
+#   /bets/history:
+#     get:
+#       summary: Get Bet History
+#       description: Get user's betting history with pagination
+#       tags:
+#         - Betting
+#       security:
+#         - BearerAuth: []
+#       parameters:
+#         - name: page
+#           in: query
+#           type: integer
+#           default: 1
+#           description: Page number (1-indexed)
+#         - name: limit
+#           in: query
+#           type: integer
+#           default: 10
+#           description: Items per page (max 100)
+#       responses:
+#         200:
+#           description: Bet history retrieved successfully
+#           schema:
+#             $ref: '#/definitions/BetHistoryResponse'
+#         401:
+#           description: Unauthorized - Invalid or missing token
+#           schema:
+#             $ref: '#/definitions/ErrorResponse'
+
+#   /game/history:
+#     get:
+#       summary: Get Game History
+#       description: Get global game round history with crash multipliers and timestamps
+#       tags:
+#         - History
+#       security:
+#         - BearerAuth: []
+#       parameters:
+#         - name: page
+#           in: query
+#           type: integer
+#           default: 1
+#           description: Page number (1-indexed)
+#         - name: limit
+#           in: query
+#           type: integer
+#           default: 20
+#           description: Items per page (max 100)
+#       responses:
+#         200:
+#           description: Game history retrieved successfully
+#           schema:
+#             $ref: '#/definitions/GameHistoryResponse'
+#         401:
+#           description: Unauthorized - Invalid or missing token
+#           schema:
+#             $ref: '#/definitions/ErrorResponse'
+
+#   /transactions/history:
+#     get:
+#       summary: Get Transaction History
+#       description: Get user's transaction history (credits, debits, wins, losses)
+#       tags:
+#         - History
+#       security:
+#         - BearerAuth: []
+#       parameters:
+#         - name: page
+#           in: query
+#           type: integer
+#           default: 1
+#           description: Page number (1-indexed)
+#         - name: limit
+#           in: query
+#           type: integer
+#           default: 20
+#           description: Items per page (max 100)
+#       responses:
+#         200:
+#           description: Transaction history retrieved successfully
+#           schema:
+#             $ref: '#/definitions/TransactionHistoryResponse'
+#         401:
+#           description: Unauthorized - Invalid or missing token
+#           schema:
+#             $ref: '#/definitions/ErrorResponse'
+
+#   /ws:
+#     get:
+#       summary: WebSocket Connection
+#       description: WebSocket endpoint for real-time game events and multiplier updates
+#       tags:
+#         - WebSocket
+#       security: []
+#       responses:
+#         101:
+#           description: Switching Protocols to WebSocket
+#         400:
+#           description: Invalid WebSocket upgrade request
+
+# definitions:
+#   RegisterRequest:
+#     type: object
+#     required:
+#       - name
+#       - email
+#       - password
+#     properties:
+#       name:
+#         type: string
+#         minLength: 2
+#         maxLength: 100
+#         example: John Doe
+#       email:
+#         type: string
+#         format: email
+#         example: john@example.com
+#       password:
+#         type: string
+#         minLength: 6
+#         example: SecurePassword123
+
+#   LoginRequest:
+#     type: object
+#     required:
+#       - email
+#       - password
+#     properties:
+#       email:
+#         type: string
+#         format: email
+#         example: john@example.com
+#       password:
+#         type: string
+#         example: SecurePassword123
+
+#   AuthResponse:
+#     type: object
+#     properties:
+#       success:
+#         type: boolean
+#         example: true
+#       message:
+#         type: string
+#         example: User registered successfully
+#       data:
+#         type: object
+#         properties:
+#           user:
+#             $ref: '#/definitions/User'
+#           token:
+#             type: string
+#             example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+#   User:
+#     type: object
+#     properties:
+#       id:
+#         type: integer
+#         example: 1
+#       name:
+#         type: string
+#         example: John Doe
+#       email:
+#         type: string
+#         example: john@example.com
+#       created_at:
+#         type: string
+#         format: date-time
+#         example: "2026-04-07T10:30:00Z"
+
+#   ProfileResponse:
+#     type: object
+#     properties:
+#       success:
+#         type: boolean
+#         example: true
+#       message:
+#         type: string
+#         example: Profile retrieved successfully
+#       data:
+#         type: object
+#         properties:
+#           user:
+#             $ref: '#/definitions/User'
+#           wallet:
+#             $ref: '#/definitions/Wallet'
+
+#   WalletResponse:
+#     type: object
+#     properties:
+#       success:
+#         type: boolean
+#         example: true
+#       message:
+#         type: string
+#         example: Wallet retrieved successfully
+#       data:
+#         $ref: '#/definitions/Wallet'
+
+#   Wallet:
+#     type: object
+#     properties:
+#       id:
+#         type: integer
+#         example: 1
+#       user_id:
+#         type: integer
+#         example: 1
+#       balance:
+#         type: number
+#         format: double
+#         example: 1000.50
+#       currency:
+#         type: string
+#         example: USD
+#       created_at:
+#         type: string
+#         format: date-time
+#         example: "2026-04-07T10:30:00Z"
+#       updated_at:
+#         type: string
+#         format: date-time
+#         example: "2026-04-07T10:30:00Z"
+
+#   BetRequest:
+#     type: object
+#     required:
+#       - amount
+#     properties:
+#       amount:
+#         type: number
+#         format: double
+#         minimum: 0.01
+#         example: 50.00
+#       auto_cashout:
+#         type: number
+#         format: double
+#         minimum: 1.0
+#         example: 2.5
+#         description: Optional multiplier at which to automatically cashout
+
+#   BetResponse:
+#     type: object
+#     properties:
+#       success:
+#         type: boolean
+#         example: true
+#       message:
+#         type: string
+#         example: Bet placed successfully
+#       data:
+#         $ref: '#/definitions/Bet'
+
+#   Bet:
+#     type: object
+#     properties:
+#       id:
+#         type: integer
+#         example: 1
+#       user_id:
+#         type: integer
+#         example: 1
+#       round_id:
+#         type: integer
+#         example: 1
+#       amount:
+#         type: number
+#         format: double
+#         example: 50.00
+#       auto_cashout:
+#         type: number
+#         format: double
+#         example: 2.5
+#       cashout_multiplier:
+#         type: number
+#         format: double
+#         example: 0.0
+#       result:
+#         type: string
+#         enum:
+#           - pending
+#           - win
+#           - loss
+#         example: pending
+#       payout:
+#         type: number
+#         format: double
+#         example: 0.0
+#       created_at:
+#         type: string
+#         format: date-time
+#         example: "2026-04-07T10:30:00Z"
+
+#   CashoutRequest:
+#     type: object
+#     required:
+#       - bet_id
+#     properties:
+#       bet_id:
+#         type: integer
+#         example: 1
+
+#   CashoutResponse:
+#     type: object
+#     properties:
+#       success:
+#         type: boolean
+#         example: true
+#       message:
+#         type: string
+#         example: Cashout successful
+#       data:
+#         type: object
+#         properties:
+#           bet_id:
+#             type: integer
+#             example: 1
+#           cashout_multiplier:
+#             type: number
+#             format: double
+#             example: 2.45
+#           payout:
+#             type: number
+#             format: double
+#             example: 122.50
+
+#   BetHistoryResponse:
+#     type: object
+#     properties:
+#       success:
+#         type: boolean
+#         example: true
+#       message:
+#         type: string
+#         example: Bet history retrieved
+#       data:
+#         type: array
+#         items:
+#           $ref: '#/definitions/Bet'
+#       pagination:
+#         $ref: '#/definitions/Pagination'
+
+#   GameHistoryResponse:
+#     type: object
+#     properties:
+#       success:
+#         type: boolean
+#         example: true
+#       message:
+#         type: string
+#         example: Game history retrieved
+#       data:
+#         type: array
+#         items:
+#           $ref: '#/definitions/GameRound'
+#       pagination:
+#         $ref: '#/definitions/Pagination'
+
+#   GameRound:
+#     type: object
+#     properties:
+#       id:
+#         type: integer
+#         example: 1
+#       round_code:
+#         type: string
+#         example: ROUND-2026-04-07-001
+#       crash_multiplier:
+#         type: number
+#         format: double
+#         example: 3.25
+#       status:
+#         type: string
+#         enum:
+#           - waiting
+#           - running
+#           - crashed
+#           - ended
+#         example: crashed
+#       start_time:
+#         type: string
+#         format: date-time
+#         example: "2026-04-07T10:30:00Z"
+#       created_at:
+#         type: string
+#         format: date-time
+#         example: "2026-04-07T10:30:00Z"
+
+#   TransactionHistoryResponse:
+#     type: object
+#     properties:
+#       success:
+#         type: boolean
+#         example: true
+#       message:
+#         type: string
+#         example: Transaction history retrieved
+#       data:
+#         type: array
+#         items:
+#           $ref: '#/definitions/Transaction'
+#       pagination:
+#         $ref: '#/definitions/Pagination'
+
+#   Transaction:
+#     type: object
+#     properties:
+#       id:
+#         type: integer
+#         example: 1
+#       user_id:
+#         type: integer
+#         example: 1
+#       type:
+#         type: string
+#         enum:
+#           - credit
+#           - debit
+#           - win
+#           - loss
+#           - deposit
+#           - withdrawal
+#           - bet
+#           - cashout
+#         example: bet
+#       amount:
+#         type: number
+#         format: double
+#         example: 50.00
+#       description:
+#         type: string
+#         example: Bet placed on round ROUND-2026-04-07-001
+#       created_at:
+#         type: string
+#         format: date-time
+#         example: "2026-04-07T10:30:00Z"
+
+#   Pagination:
+#     type: object
+#     properties:
+#       page:
+#         type: integer
+#         example: 1
+#       limit:
+#         type: integer
+#         example: 10
+#       total:
+#         type: integer
+#         example: 150
+
+#   ErrorResponse:
+#     type: object
+#     properties:
+#       success:
+#         type: boolean
+#         example: false
+#       message:
+#         type: string
+#         example: Error message
+#       error:
+#         type: string
+#         example: Detailed error information
+
+# tags:
+#   - name: Health
+#     description: Server health check
+#   - name: Authentication
+#     description: User registration and login
+#   - name: Profile
+#     description: User profile management
+#   - name: Wallet
+#     description: Wallet and balance management
+#   - name: Betting
+#     description: Betting operations and history
+#   - name: History
+#     description: Game and transaction history
+#   - name: WebSocket
+#     description: Real-time WebSocket events
+
+
+
+swagger: "2.0"
+
+info:
+  title: Aviator Betting Game API
+  version: "1.0.0"
+  description: Real-time Aviator betting game backend with WebSocket support
+  termsOfService: http://swagger.io/terms/
+  contact:
+    name: API Support
+    email: support@aviator.game
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+host: localhost:8080
+basePath: /api/v1
+schemes:
+  - http
+  - https
+
+consumes:
+  - application/json
+produces:
+  - application/json
+
+securityDefinitions:
+  BearerAuth:
+    type: apiKey
+    name: Authorization
+    in: header
+    description: 'JWT Bearer token. Format: Bearer {token}'
+
+paths:
+  /health:
+    get:
+      summary: Health Check
+      description: Check if the server is running and healthy
+      tags:
+        - Health
+      security: []
+      responses:
+        200:
+          description: Server is healthy
+          schema:
+            $ref: "#/definitions/HealthResponse"
+
+  /register:
+    post:
+      summary: Register a new user
+      description: Register a new user with name, email and password
+      tags:
+        - Authentication
+      security: []
+      parameters:
+        - name: request
+          in: body
+          required: true
+          description: User registration data
+          schema:
+            $ref: "#/definitions/RegisterRequest"
+      responses:
+        201:
+          description: User registered successfully
+          schema:
+            $ref: "#/definitions/AuthResponse"
+        400:
+          description: Invalid input or validation failed
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        409:
+          description: Email already exists
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /login:
+    post:
+      summary: User login
+      description: Login with email and password to get JWT token
+      tags:
+        - Authentication
+      security: []
+      parameters:
+        - name: request
+          in: body
+          required: true
+          description: User login credentials
+          schema:
+            $ref: "#/definitions/LoginRequest"
+      responses:
+        200:
+          description: Login successful
+          schema:
+            $ref: "#/definitions/AuthResponse"
+        400:
+          description: Invalid request or validation failed
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        401:
+          description: Authentication failed
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /verify:
+    get:
+      summary: Verify JWT token
+      description: Verify the validity of a JWT token and return user information
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Token is valid
+          schema:
+            $ref: "#/definitions/VerifyTokenResponse"
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /profile:
+    get:
+      summary: Get User Profile
+      description: Get authenticated user's profile information including wallet balance
+      tags:
+        - Profile
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Profile retrieved successfully
+          schema:
+            $ref: "#/definitions/ProfileResponse"
+        401:
+          description: Unauthorized - Invalid or missing token
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        404:
+          description: User not found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+    put:
+      summary: Update User Profile
+      description: Update user's name and email
+      tags:
+        - Profile
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: request
+          in: body
+          required: true
+          description: Profile update data
+          schema:
+            $ref: "#/definitions/UpdateProfileRequest"
+      responses:
+        200:
+          description: Profile updated successfully
+          schema:
+            $ref: "#/definitions/ProfileResponse"
+        400:
+          description: Invalid request or validation failed
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /profile/statistics:
+    get:
+      summary: Get User Statistics
+      description: Get authenticated user's game statistics
+      tags:
+        - Profile
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Statistics retrieved successfully
+          schema:
+            $ref: "#/definitions/ProfileStatisticsResponse"
+        401:
+          description: Unauthorized
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /wallet:
+    get:
+      summary: Get Wallet Balance
+      description: Get authenticated user's current wallet balance and transaction count
+      tags:
+        - Wallet
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Wallet retrieved successfully
+          schema:
+            $ref: "#/definitions/WalletResponse"
+        401:
+          description: Unauthorized - Invalid or missing token
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        404:
+          description: Wallet not found
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /bet:
+    post:
+      summary: Place a Bet
+      description: Place a new bet on the current game round with optional auto-cashout
+      tags:
+        - Betting
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: request
+          in: body
+          required: true
+          description: Bet request data
+          schema:
+            $ref: "#/definitions/BetRequest"
+      responses:
+        201:
+          description: Bet placed successfully
+          schema:
+            $ref: "#/definitions/BetResponse"
+        400:
+          description: Bet placement failed - Insufficient balance or invalid amount
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        401:
+          description: Unauthorized - Invalid or missing token
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /cashout:
+    post:
+      summary: Cashout a Bet
+      description: Cashout an active bet at the current multiplier value
+      tags:
+        - Betting
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: request
+          in: body
+          required: true
+          description: Cashout request data
+          schema:
+            $ref: "#/definitions/CashoutRequest"
+      responses:
+        200:
+          description: Cashout successful
+          schema:
+            $ref: "#/definitions/CashoutResponse"
+        400:
+          description: Cashout failed - Bet not found or already cashed out
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+        401:
+          description: Unauthorized - Invalid or missing token
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /bets/history:
+    get:
+      summary: Get Bet History
+      description: Get user's betting history with pagination
+      tags:
+        - Betting
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          type: integer
+          default: 1
+          description: Page number (1-indexed)
+        - name: limit
+          in: query
+          type: integer
+          default: 10
+          description: Items per page
+      responses:
+        200:
+          description: Bet history retrieved successfully
+          schema:
+            $ref: "#/definitions/BetHistoryResponse"
+        401:
+          description: Unauthorized - Invalid or missing token
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /game/history:
+    get:
+      summary: Get Game History
+      description: Get global game round history with crash multipliers and timestamps
+      tags:
+        - History
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          type: integer
+          default: 1
+          description: Page number (1-indexed)
+        - name: limit
+          in: query
+          type: integer
+          default: 20
+          description: Items per page
+      responses:
+        200:
+          description: Game history retrieved successfully
+          schema:
+            $ref: "#/definitions/GameHistoryResponse"
+        401:
+          description: Unauthorized - Invalid or missing token
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /transactions/history:
+    get:
+      summary: Get Transaction History
+      description: Get user's transaction history
+      tags:
+        - History
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: page
+          in: query
+          type: integer
+          default: 1
+          description: Page number (1-indexed)
+        - name: limit
+          in: query
+          type: integer
+          default: 20
+          description: Items per page
+      responses:
+        200:
+          description: Transaction history retrieved successfully
+          schema:
+            $ref: "#/definitions/TransactionHistoryResponse"
+        401:
+          description: Unauthorized - Invalid or missing token
+          schema:
+            $ref: "#/definitions/ErrorResponse"
+
+  /ws:
+    get:
+      summary: WebSocket Connection
+      description: WebSocket endpoint for real-time game events and multiplier updates
+      tags:
+        - WebSocket
+      security: []
+      responses:
+        101:
+          description: Switching Protocols to WebSocket
+        400:
+          description: Invalid WebSocket upgrade request
+
+definitions:
+  HealthResponse:
+    type: object
+    properties:
+      success:
+        type: boolean
+        example: true
+      message:
+        type: string
+        example: Server is healthy
+      data:
+        type: object
+        properties:
+          status:
+            type: string
+            example: ok
+
+  RegisterRequest:
+    type: object
+    required:
+      - name
+      - email
+      - password
+    properties:
+      name:
+        type: string
+        example: John Doe
+      email:
+        type: string
+        format: email
+        example: john@example.com
+      password:
+        type: string
+        example: SecurePassword123
+
+  LoginRequest:
+    type: object
+    required:
+      - email
+      - password
+    properties:
+      email:
+        type: string
+        format: email
+        example: john@example.com
+      password:
+        type: string
+        example: SecurePassword123
+
+  UpdateProfileRequest:
+    type: object
+    required:
+      - name
+      - email
+    properties:
+      name:
+        type: string
+        example: John Doe
+      email:
+        type: string
+        format: email
+        example: john@example.com
+
+  AuthResponse:
+    type: object
+    properties:
+      success:
+        type: boolean
+        example: true
+      message:
+        type: string
+        example: Login successful
+      data:
+        type: object
+        properties:
+          user:
+            $ref: "#/definitions/User"
+          token:
+            type: string
+            example: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+
+  VerifyTokenResponse:
+    type: object
+    properties:
+      success:
+        type: boolean
+        example: true
+      message:
+        type: string
+        example: Token verified successfully
+      data:
+        type: object
+        properties:
+          user:
+            $ref: "#/definitions/User"
+
+  User:
+    type: object
+    properties:
+      id:
+        type: integer
+        example: 1
+      name:
+        type: string
+        example: John Doe
+      email:
+        type: string
+        example: john@example.com
+      created_at:
+        type: string
+        format: date-time
+        example: "2026-04-07T10:30:00Z"
+
+  ProfileResponse:
+    type: object
+    properties:
+      success:
+        type: boolean
+        example: true
+      message:
+        type: string
+        example: Profile retrieved successfully
+      data:
+        type: object
+        properties:
+          user:
+            $ref: "#/definitions/User"
+          wallet:
+            $ref: "#/definitions/Wallet"
+
+  ProfileStatisticsResponse:
+    type: object
+    properties:
+      success:
+        type: boolean
+        example: true
+      message:
+        type: string
+        example: Statistics retrieved successfully
+      data:
+        type: object
+        properties:
+          total_bets:
+            type: integer
+            example: 25
+          total_wins:
+            type: integer
+            example: 12
+          total_losses:
+            type: integer
+            example: 13
+          total_wagered:
+            type: number
+            format: double
+            example: 1250.50
+          total_payout:
+            type: number
+            format: double
+            example: 1430.75
+
+  WalletResponse:
+    type: object
+    properties:
+      success:
+        type: boolean
+        example: true
+      message:
+        type: string
+        example: Wallet retrieved successfully
+      data:
+        $ref: "#/definitions/Wallet"
+
+  Wallet:
+    type: object
+    properties:
+      id:
+        type: integer
+        example: 1
+      user_id:
+        type: integer
+        example: 1
+      balance:
+        type: number
+        format: double
+        example: 1000.50
+      currency:
+        type: string
+        example: USD
+      created_at:
+        type: string
+        format: date-time
+        example: "2026-04-07T10:30:00Z"
+      updated_at:
+        type: string
+        format: date-time
+        example: "2026-04-07T10:30:00Z"
+
+  BetRequest:
+    type: object
+    required:
+      - amount
+    properties:
+      amount:
+        type: number
+        format: double
+        example: 50
+      auto_cashout:
+        type: number
+        format: double
+        example: 2.5
+        description: Optional multiplier at which to automatically cashout
+
+  BetResponse:
+    type: object
+    properties:
+      success:
+        type: boolean
+        example: true
+      message:
+        type: string
+        example: Bet placed successfully
+      data:
+        $ref: "#/definitions/Bet"
+
+  Bet:
+    type: object
+    properties:
+      id:
+        type: integer
+        example: 1
+      user_id:
+        type: integer
+        example: 1
+      round_id:
+        type: integer
+        example: 1
+      amount:
+        type: number
+        format: double
+        example: 50
+      auto_cashout:
+        type: number
+        format: double
+        example: 2.5
+      cashout_multiplier:
+        type: number
+        format: double
+        example: 0
+      result:
+        type: string
+        example: pending
+      payout:
+        type: number
+        format: double
+        example: 0
+      created_at:
+        type: string
+        format: date-time
+        example: "2026-04-07T10:30:00Z"
+
+  CashoutRequest:
+    type: object
+    required:
+      - bet_id
+    properties:
+      bet_id:
+        type: integer
+        example: 1
+
+  CashoutResponse:
+    type: object
+    properties:
+      success:
+        type: boolean
+        example: true
+      message:
+        type: string
+        example: Cashout successful
+      data:
+        type: object
+        properties:
+          bet_id:
+            type: integer
+            example: 1
+          cashout_multiplier:
+            type: number
+            format: double
+            example: 2.45
+          payout:
+            type: number
+            format: double
+            example: 122.5
+
+  BetHistoryResponse:
+    type: object
+    properties:
+      success:
+        type: boolean
+        example: true
+      message:
+        type: string
+        example: Bet history retrieved
+      data:
+        type: array
+        items:
+          $ref: "#/definitions/Bet"
+      pagination:
+        $ref: "#/definitions/Pagination"
+
+  GameHistoryResponse:
+    type: object
+    properties:
+      success:
+        type: boolean
+        example: true
+      message:
+        type: string
+        example: Game history retrieved
+      data:
+        type: array
+        items:
+          $ref: "#/definitions/GameRound"
+      pagination:
+        $ref: "#/definitions/Pagination"
+
+  GameRound:
+    type: object
+    properties:
+      id:
+        type: integer
+        example: 1
+      round_code:
+        type: string
+        example: ROUND-2026-04-07-001
+      crash_multiplier:
+        type: number
+        format: double
+        example: 3.25
+      status:
+        type: string
+        example: crashed
+      start_time:
+        type: string
+        format: date-time
+        example: "2026-04-07T10:30:00Z"
+      created_at:
+        type: string
+        format: date-time
+        example: "2026-04-07T10:30:00Z"
+
+  TransactionHistoryResponse:
+    type: object
+    properties:
+      success:
+        type: boolean
+        example: true
+      message:
+        type: string
+        example: Transaction history retrieved
+      data:
+        type: array
+        items:
+          $ref: "#/definitions/Transaction"
+      pagination:
+        $ref: "#/definitions/Pagination"
+
+  Transaction:
+    type: object
+    properties:
+      id:
+        type: integer
+        example: 1
+      user_id:
+        type: integer
+        example: 1
+      type:
+        type: string
+        example: bet
+      amount:
+        type: number
+        format: double
+        example: 50
+      description:
+        type: string
+        example: Bet placed on round ROUND-2026-04-07-001
+      created_at:
+        type: string
+        format: date-time
+        example: "2026-04-07T10:30:00Z"
+
+  Pagination:
+    type: object
+    properties:
+      page:
+        type: integer
+        example: 1
+      limit:
+        type: integer
+        example: 10
+      total:
+        type: integer
+        example: 150
+
+  ErrorResponse:
+    type: object
+    properties:
+      success:
+        type: boolean
+        example: false
+      message:
+        type: string
+        example: Error message
+      error:
+        type: string
+        example: Detailed error information
+
+tags:
+  - name: Health
+    description: Server health check
+  - name: Authentication
+    description: User registration and login
+  - name: Profile
+    description: User profile management
+  - name: Wallet
+    description: Wallet and balance management
+  - name: Betting
+    description: Betting operations and history
+  - name: History
+    description: Game and transaction history
+  - name: WebSocket
+    description: Real-time WebSocket events
